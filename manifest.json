@@ -1,6 +1,7 @@
 {
   "name": "Zebari TV",
   "short_name": "Zebari TV",
+  "description": "Zebari TV IPTV App",
   "start_url": "/Zebari-TV/index.html",
   "display": "standalone",
   "background_color": "#050608",
