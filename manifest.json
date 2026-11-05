@@ -8,8 +8,13 @@
   "theme_color": "#ff003c",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/IPTV_Logo.png/192px-IPTV_Logo.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2933/2933220.png",
       "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2933/2933220.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
