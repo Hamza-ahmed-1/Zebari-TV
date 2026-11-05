@@ -4,142 +4,72 @@
 <meta charset="UTF-8">
 <link rel="manifest" href="manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Zebari TV Pro - Nilesat & Multi-Server</title>
+<title>Zebari TV Pro - EPG Enabled</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-
-  :root {
-    --bg-body: #050608;
-    --bg-card: rgba(20, 24, 34, 0.7);
-    --primary: #ff003c;
-    --primary-glow: rgba(255, 0, 60, 0.4);
-    --text-main: #ffffff;
-    --text-muted: #9ba1b1;
-    --border: rgba(255, 255, 255, 0.08);
-    --glass-blur: blur(12px);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    background-color: var(--bg-body);
-    background-image: 
-      radial-gradient(circle at 10% 20%, rgba(255, 0, 60, 0.08) 0%, transparent 30%),
-      radial-gradient(circle at 90% 80%, rgba(0, 150, 255, 0.08) 0%, transparent 30%);
-    color: var(--text-main);
-    min-height: 100vh;
-    padding-bottom: 30px;
-  }
-
-  header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 20px; background: rgba(5, 6, 8, 0.8); backdrop-filter: var(--glass-blur);
-    position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);
-  }
+  :root { --bg-body: #050608; --bg-card: rgba(20, 24, 34, 0.7); --primary: #ff003c; --text-main: #ffffff; --text-muted: #9ba1b1; --border: rgba(255,255,255,0.08); }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+  body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; padding-bottom: 30px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: rgba(5, 6, 8, 0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
   .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .logo i { color: var(--primary); font-size: 20px; }
-  .logo span { color: var(--primary); }
-  .badge-pro { background: linear-gradient(45deg, #ff003c, #ff7a00); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; box-shadow: 0 0 10px var(--primary-glow); }
-
+  .logo i { color: var(--primary); } .logo span { color: var(--primary); }
+  .badge-pro { background: linear-gradient(45deg, #ff003c, #ff7a00); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
   .player-container { padding: 15px 20px; position: relative; }
-  .video-wrapper { position: relative; background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 9; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid var(--border); }
+  .video-wrapper { position: relative; background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 9; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
   video { width: 100%; height: 100%; display: block; }
-
   .video-controls { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; z-index: 20; }
-  .ctrl-btn { background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; font-size: 14px; }
-  .ctrl-btn:hover { background: var(--primary); border-color: var(--primary); }
-  .ctrl-btn.server-btn { color: #00ffaa; border-color: rgba(0, 255, 170, 0.3); }
-  .ctrl-btn.server-btn:hover { background: #00ffaa; color: #000; }
-
-  .quality-menu {
-    position: absolute; top: 55px; left: 10px;
-    background: rgba(5, 6, 8, 0.9); backdrop-filter: blur(10px);
-    border: 1px solid var(--border); border-radius: 8px;
-    display: none; flex-direction: column; gap: 2px;
-    padding: 5px; z-index: 30; min-width: 120px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  }
-  .quality-menu button {
-    background: transparent; color: var(--text-main); border: none;
-    padding: 8px 12px; text-align: right; border-radius: 4px;
-    font-size: 13px; cursor: pointer; font-family: inherit; transition: 0.2s;
-  }
-  .quality-menu button:hover { background: rgba(255,255,255,0.1); }
-  .quality-menu button.active { color: var(--primary); font-weight: bold; background: rgba(255,0,60,0.1); }
-
-  .loading-overlay { position: absolute; inset: 0; background: rgba(5, 6, 8, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 15; }
-  .spinner { width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; box-shadow: 0 0 15px var(--primary-glow); }
+  .ctrl-btn { background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+  .loading-overlay { position: absolute; inset: 0; background: rgba(5, 6, 8, 0.8); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 15; }
+  .spinner { width: 45px; height: 45px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { margin-top: 15px; font-size: 14px; color: var(--primary); font-weight: 600; letter-spacing: 1px; }
-
+  .loading-text { margin-top: 15px; font-size: 14px; color: var(--primary); font-weight: 600; }
+  /* شريط EPG */
+  .epg-bar { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin: 10px 20px 0; padding: 12px 15px; flex-direction: column; gap: 5px; }
+  .epg-title { font-size: 13px; font-weight: 700; color: var(--primary); }
+  .epg-program { font-size: 14px; font-weight: 600; color: var(--text-main); }
+  .epg-next { font-size: 12px; color: var(--text-muted); }
   .search-container { padding: 10px 20px; }
-  .search-inner { position: relative; }
-  .search-inner i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-  .search-box { width: 100%; padding: 12px 40px 12px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; backdrop-filter: var(--glass-blur); }
-  .search-box:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-
+  .search-inner { position: relative; } .search-inner i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .search-box { width: 100%; padding: 12px 40px 12px 15px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); outline: none; }
   .categories { display: flex; gap: 10px; padding: 10px 20px 15px; overflow-x: auto; scrollbar-width: none; }
-  .categories::-webkit-scrollbar { display: none; }
-  .cat-btn { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.3s; backdrop-filter: var(--glass-blur); }
-  .cat-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-
+  .cat-btn { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  .cat-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
   .channels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 0 20px; }
-  .channel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 15px 10px; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative; backdrop-filter: var(--glass-blur); overflow: hidden; }
-  .channel-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.2); }
-  .channel-card.active { border-color: var(--primary); box-shadow: 0 8px 20px var(--primary-glow); background: linear-gradient(180deg, rgba(255,0,60,0.1) 0%, var(--bg-card) 100%); }
-
-  .fav-btn { position: absolute; top: 8px; left: 8px; background: transparent; border: none; color: #555; font-size: 16px; cursor: pointer; transition: 0.3s; z-index: 5; padding: 5px; }
-  .fav-btn.active { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-
-  .live-dot { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 8px var(--primary); }
-  
-  .channel-icon { height: 60px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; color: #fff; }
+  .channel-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 15px 10px; text-align: center; cursor: pointer; position: relative; }
+  .channel-card.active { border-color: var(--primary); background: linear-gradient(180deg, rgba(255,0,60,0.1) 0%, var(--bg-card) 100%); }
+  .channel-icon { height: 60px; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
   .channel-logo { max-width: 60px; max-height: 60px; border-radius: 8px; object-fit: contain; }
-
   .channel-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .channel-cat { font-size: 11px; color: var(--text-muted); }
-
-  #toast-container { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-  .toast { background: rgba(255, 0, 60, 0.9); backdrop-filter: blur(10px); color: #fff; padding: 12px 15px; border-radius: 10px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); animation: slideDown 0.3s ease forwards; border-left: 4px solid #fff; }
-  .toast.success { background: rgba(0, 200, 100, 0.9); }
-  .toast.info { background: rgba(0, 150, 255, 0.9); }
-  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-  .no-results { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); font-size: 15px; }
-  .no-results i { font-size: 40px; margin-bottom: 15px; opacity: 0.5; display: block; }
 </style>
 </head>
 <body>
 
-<div id="toast-container"></div>
-
 <header>
-  <div class="logo">
-    <i class="fa-solid fa-tv"></i> Zebari <span>TV</span>
-  </div>
-  <div class="badge-pro">NILESAT</div>
+  <div class="logo"><i class="fa-solid fa-tv"></i> Zebari <span>TV</span></div>
+  <div class="badge-pro">EPG ACTIVE</div>
 </header>
 
 <div class="player-container">
   <div class="video-wrapper">
     <video id="videoPlayer" controls playsinline></video>
-    
     <div class="video-controls">
       <button class="ctrl-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
-      <button class="ctrl-btn" onclick="togglePiP()"><i class="fa-solid fa-clone"></i></button>
-      <button class="ctrl-btn" onclick="toggleQualityMenu(event)"><i class="fa-solid fa-gear"></i></button>
-      <button class="ctrl-btn server-btn" onclick="switchServer()" title="تبديل السيرفر"><i class="fa-solid fa-server"></i></button>
     </div>
-
-    <div class="quality-menu" id="qualityMenu"></div>
-
     <div class="loading-overlay" id="loadingOverlay">
       <div class="spinner"></div>
-      <div class="loading-text" id="loadingText">جاري الاتصال بالسيرفر 1...</div>
+      <div class="loading-text">جاري الاتصال...</div>
     </div>
   </div>
+</div>
+
+<!-- شريط عرض دليل البرامج -->
+<div class="epg-bar" id="epgBar">
+  <div class="epg-title">الآن على الشاشة:</div>
+  <div class="epg-program" id="epgNow">جاري تحميل دليل البرامج...</div>
+  <div class="epg-next" id="epgNext"></div>
 </div>
 
 <div class="search-container">
@@ -149,275 +79,154 @@
   </div>
 </div>
 
-<div class="categories" id="categoriesContainer"></div>
+<div class="categories" id="categoriesContainer"><div style="padding: 10px; color: #888;">جاري تحميل القنوات...</div></div>
 <div class="channels-grid" id="channelsContainer"></div>
 
 <script>
-  const channelsList = [
-    // ==================== قنوات نايل سات (مختارة) ====================
-    { 
-      id: 100, name: "MBC Masr", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MBC_Masr_Logo.png/240px-MBC_Masr_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-masr-prod-dub.shahid.net/out/v1/b7093401da27496797a8949de23f4578/index.m3u8",
-        "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-usa/cd8d40acdab28aac0582faa3bd3983f1/index.m3u8"
-      ] 
-    },
-    { 
-      id: 101, name: "MBC Masr 2", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/MBC_Masr_Logo.png/240px-MBC_Masr_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-masr2-prod-dub.shahid.net/out/v1/6e2f2e4e2c4c4e8e9e8e8e8e8e8e8e8e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 102, name: "CBC", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/CBC_Egypt_Logo.png/240px-CBC_Egypt_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://flu.systemnet.tv/CBC/index.m3u8",
-        "http://95.170.215.109/hls/CBC-Backup-M.m3u8"
-      ] 
-    },
-    { 
-      id: 103, name: "CBC Drama", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/CBC_Egypt_Logo.png/240px-CBC_Egypt_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "http://95.170.215.109/hls/CBC-Drama-Backup-M.m3u8"
-      ] 
-    },
-    { 
-      id: 104, name: "ON E", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/ON_E_Logo.png/240px-ON_E_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-one-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 105, name: "ON Drama", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/ON_E_Logo.png/240px-ON_E_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "https://shls-ondrama-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 106, name: "Al Nahar", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Al_Nahar_TV_Logo.png/240px-Al_Nahar_TV_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-elnahar-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 107, name: "Al Nahar Drama", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Al_Nahar_TV_Logo.png/240px-Al_Nahar_TV_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "https://shls-elnahardrama-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 108, name: "Sada El Balad", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Sada_El_Balad_Logo.png/240px-Sada_El_Balad_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-sadaelbalad-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 109, name: "Rotana Cinema", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Rotana_Cinema_Logo.png/240px-Rotana_Cinema_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "https://shls-rotanacinema-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 110, name: "Rotana Classic", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Rotana_Classic_Logo.png/240px-Rotana_Classic_Logo.png", icon: "fa-solid fa-music",
-      urls: [
-        "https://shls-rotanaclassic-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 111, name: "Al Hayah", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Al_Hayah_TV_Logo.png/240px-Al_Hayah_TV_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-alhayah-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 112, name: "Al Hayah Drama", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Al_Hayah_TV_Logo.png/240px-Al_Hayah_TV_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "https://shls-alhayahdrama-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 113, name: "Al Kahera Wal Nas", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Al_Kahera_Wal_Nas_Logo.png/240px-Al_Kahera_Wal_Nas_Logo.png", icon: "fa-solid fa-tv",
-      urls: [
-        "https://shls-alkaherawalnas-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
-    { 
-      id: 114, name: "Cairo Cinema", cat: "نايل سات", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cairo_Cinema_Logo.png/240px-Cairo_Cinema_Logo.png", icon: "fa-solid fa-film",
-      urls: [
-        "https://shls-caiocinema-prod-dub.shahid.net/out/v1/8a5a5e5e5e5e5e5e5e5e5e5e5e5e5e5e/index.m3u8"
-      ] 
-    },
+  // =========================================================
+  // الروابط الأساسية
+  // =========================================================
+  const M3U_URL = 'https://iptv-org.github.io/iptv/countries/es.m3u'; // قنوات إسبانيا لتتناسب مع EPG
+  const EPG_URL = 'https://iptv-org.github.io/epg/guides/es.xml'; // رابط دليل البرامج
 
-    // ==================== القنوات الكردية ====================
-    { id: 1, name: "RUDAW TV", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Rudaw_TV_Logo.png/240px-Rudaw_TV_Logo.png", icon: "fa-solid fa-tower-broadcast", urls: ["https://live.rudaw.net/hls/rudaw-tv/master.m3u8", "https://hlspackager.akamaized.net/live/DB/RUDAW_TV/HLS/RUDAW_TV.m3u8"] },
-    { id: 2, name: "AVA MEDIA", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/AVA_TV_Logo.png/240px-AVA_TV_Logo.png", icon: "fa-solid fa-film", urls: ["https://ava2.store/upload/ava.m3u8", "https://hlspackager.akamaized.net/live/DB/AVA_TV/HLS/AVA_TV.m3u8"] },
-    { id: 3, name: "KURDISTAN 24", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/K24_Logo_2019.png/240px-K24_Logo_2019.png", icon: "fa-solid fa-chart-line", urls: ["https://d1x82nydcxndze.cloudfront.net/live/index.m3u8", "https://livecdn.premiumfree.tv/afxpstr/K24Backup/index.m3u8"] },
-    { id: 4, name: "SPEDA TV", cat: "كردية", logo: "https://i.imgur.com/Zo3IWOn.png", icon: "fa-solid fa-tv", urls: ["http://line.trxdnscloud.ru:80/live/1naebx0n1p/en1cy28eqj/324587.ts"] },
-    { id: 5, name: "GALI KURDISTAN", cat: "كردية", logo: "https://i.imgur.com/Zo3IWOn.png", icon: "fa-solid fa-satellite-dish", urls: ["http://185.95.184.33:25461/live/120541/20364/182.m3u8"] },
-    { id: 6, name: "KURDSAT NEWS", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Kurdsat_Logo.png/240px-Kurdsat_Logo.png", icon: "fa-solid fa-newspaper", urls: ["https://hlspackager.akamaized.net/live/DB/KURDSAT_NEWS/HLS/KURDSAT_NEWS.m3u8"] },
-    { id: 7, name: "NUÇÊ TV", cat: "كردية", logo: "https://i.imgur.com/WHeH5i7.png", icon: "fa-solid fa-globe", urls: ["https://hlspackager.akamaized.net/live/DB/NU_TV/HLS/NU_TV.m3u8"] },
-    { id: 8, name: "NRT TV", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/NRT_News_Logo.png/240px-NRT_News_Logo.png", icon: "fa-solid fa-newspaper", urls: ["http://prxy-wza-02.iptv-playoutcenter.de/nrtarabic/nrtarabic.stream_1/playlist.m3u8"] },
-    { id: 9, name: "CHANNEL 8", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Channel8_Logo.png/240px-Channel8_Logo.png", icon: "fa-solid fa-video", urls: ["https://live.channel8.com/Channel8-Kurdish/index.m3u8"] },
-    { id: 10, name: "KIRKUK TV", cat: "كردية", logo: "https://i.imgur.com/9qFHjnu.png", icon: "fa-solid fa-gear", urls: ["https://live.kirkuklive.live/hls/stream/index.m3u8"] },
-    { id: 11, name: "SLEMANI TV", cat: "كردية", logo: "https://i.imgur.com/9lOuzHQ.png", icon: "fa-solid fa-wrench", urls: ["http://185.95.184.33:25461/live/120541/20364/102.m3u8"] },
-    { id: 12, name: "DERWAZA TV", cat: "كردية", logo: "https://i.imgur.com/0UYcylY.png", icon: "fa-solid fa-tv", urls: ["http://185.95.184.33:25461/live/120541/20364/104.m3u8"] },
-    { id: 13, name: "HALABJA TV", cat: "كردية", logo: "https://i.imgur.com/0UYcylY.png", icon: "fa-solid fa-satellite", urls: ["http://185.95.184.33:25461/live/120541/20364/107.m3u8"] },
-    { id: 14, name: "KURD CHANNEL", cat: "كردية", logo: "https://i.imgur.com/xPwzad9.png", icon: "fa-solid fa-tv", urls: ["https://kurdchhls.wns.live/hls/stream.m3u8"] },
-    { id: 15, name: "MIX KURDY", cat: "كردية", logo: "https://i.imgur.com/WHeH5i7.png", icon: "fa-solid fa-music", urls: ["https://avr.host247.net/live/Mix-kurdy/playlist.m3u8"] },
-    { id: 16, name: "WAAR TV", cat: "كردية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Waar_TV_Logo.png/240px-Waar_TV_Logo.png", icon: "fa-solid fa-globe", urls: ["https://live.kwikmotion.com/waarmedialive/waarmedia.smil/waarmediapublish/waarmedia_source/chunks.m3u8"] },
-    
-    // ==================== القنوات العربية ====================
-    { id: 20, name: "MBC 1", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/MBC_1_Logo.png/240px-MBC_1_Logo.png", icon: "fa-solid fa-film", urls: ["https://shls-mbc1ksa-prod-dub.shahid.net/out/v1/451b666db1fb41c7a4bbecf7b4865107/index.m3u8"] },
-    { id: 21, name: "MBC 2", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/MBC_2_Logo.png/240px-MBC_2_Logo.png", icon: "fa-solid fa-film", urls: ["https://shls-mbc2-prod-dub.shahid.net/out/v1/b4befe19798745fe986f5a9bfba62126/index.m3u8"] },
-    { id: 22, name: "MBC 3", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/MBC_3_Logo.png/240px-MBC_3_Logo.png", icon: "fa-solid fa-child", urls: ["https://shls-mbc3-prod-dub.shahid.net/out/v1/d5bbe570e1514d3d9a142657d33d85e6/index.m3u8"] },
-    { id: 23, name: "MBC 4", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/MBC_4_Logo.png/240px-MBC_4_Logo.png", icon: "fa-solid fa-tv", urls: ["https://shls-mbc4-prod-dub.shahid.net/out/v1/c08681f81775496ab4afa2bac7ae7638/index.m3u8"] },
-    { id: 24, name: "MBC 5", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/ar/4/48/Mbc5.webp", icon: "fa-solid fa-tv", urls: ["https://shls-mbc5-prod-dub.shahid.net/out/v1/2720564b6a4641658fdfb6884b160da2/index.m3u8"] },
-    { id: 25, name: "MBC MAX", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/MBC_MAX_Logo.png/240px-MBC_MAX_Logo.png", icon: "fa-solid fa-film", urls: ["https://shls-mbcmax-prod-dub.shahid.net/out/v1/13815a7cda864c249a88c38e66a2e653/index.m3u8"] },
-    { id: 26, name: "MBC ACTION", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/MBC_Action_Logo.png/240px-MBC_Action_Logo.png", icon: "fa-solid fa-video", urls: ["https://shls-mbcaction-prod-dub.shahid.net/out/v1/451b666db1fb41c7a4bbecf7b4865107/index.m3u8"] },
-    { id: 27, name: "الجزيرة", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Al_Jazeera_2020_logo.svg/240px-Al_Jazeera_2020_logo.svg.png", icon: "fa-solid fa-tower-broadcast", urls: ["https://live-hls-web-aje.getaj.net/AJE/index.m3u8", "https://live-hls-web-aje-gcp.thehlive.com/AJE/index.m3u8"] },
-    { id: 28, name: "العربية", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Al_Arabiya_Logo.png/240px-Al_Arabiya_Logo.png", icon: "fa-solid fa-satellite-dish", urls: ["https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8"] },
-    { id: 29, name: "الحدث", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Al_Arabiya_Logo.png/240px-Al_Arabiya_Logo.png", icon: "fa-solid fa-chart-line", urls: ["https://av.alarabiya.net/alarabiapublish/alhadath.smil/playlist.m3u8"] },
-    { id: 30, name: "BBC عربي", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/BBC_News_2019.svg/240px-BBC_News_2019.svg.png", icon: "fa-solid fa-globe", urls: ["https://vs-cmaf-pushb-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_arabic_tv/pc_hd_abr_v2_akamai_mf_cmaf_master.m3u8"] },
-    { id: 31, name: "DW عربية", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Deutsche_Welle_symbol_2012.svg/240px-Deutsche_Welle_symbol_2012.svg.png", icon: "fa-solid fa-newspaper", urls: ["https://dwamdstream107.akamaized.net/hls/live/2018932/dwstream107/index.m3u8"] },
-    { id: 32, name: "العراقية", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Al_Iraqia_Logo.png/240px-Al_Iraqia_Logo.png", icon: "fa-solid fa-tv", urls: ["https://cdn.catiacast.video/abr/8d2ffb0aba244e8d9101a9488a7daa05/playlist.m3u8"] },
-    { id: 33, name: "الشرقية", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Al_Sharqiya_TV_Logo.png/240px-Al_Sharqiya_TV_Logo.png", icon: "fa-solid fa-satellite", urls: ["https://5d94523502c2d.streamlock.net/home/mystream/playlist.m3u8"] },
-    { id: 34, name: "اقرأ", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Iqraa_TV_Logo.png/240px-Iqraa_TV_Logo.png", icon: "fa-solid fa-book", urls: ["https://iqraac.cdn.mangomolo.com/iqraa/smil:iqraar1.stream.smil/playlist.m3u8"] },
-    { id: 35, name: "مكة", cat: "عربية", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Saudi_Quran_TV_Logo.png/240px-Saudi_Quran_TV_Logo.png", icon: "fa-solid fa-mosque", urls: ["https://win.holol.com/live/makkah/playlist.m3u8"] },
-
-    // ==================== القنوات الرياضية ====================
-    { id: 40, name: "beIN SPORTS News", cat: "رياضة", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/BeIN_Sports_Logo.png/240px-Bein_Sports_Logo.png", icon: "fa-solid fa-futbol", urls: ["https://ch.iptvmate.net/416c659759389f6720202a9de9c16572.m3u8", "http://31.220.1.190:8080/live/WuYC3qhd9/65udrOt48Y/198000.m3u8", "https://ch.iptvmate.net/0c7fff6483ba64fc51e25ec7368b09fd.m3u8"] },
-    { id: 41, name: "beIN SPORTS 1", cat: "رياضة", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/BeIN_Sports_Logo.png/240px-Bein_Sports_Logo.png", icon: "fa-solid fa-futbol", urls: ["https://ch.iptvmate.net/0c7fff6483ba64fc51e25ec7368b09fd.m3u8"] },
-    { id: 42, name: "beIN SPORTS 2", cat: "رياضة", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/BeIN_Sports_Logo.png/240px-Bein_Sports_Logo.png", icon: "fa-solid fa-futbol", urls: ["https://ch.iptvmate.net/5cde4a4781da1ead66a8c5a98ef888a7.m3u8"] }
-  ];
-
+  let channelsList = [];
+  let epgData = {}; // لتخزين بيانات EPG
   let hls = null;
   let currentCategory = 'الكل';
   let currentSearch = '';
   let currentPlayingId = null;
-  
-  let activeChannel = null;
-  let currentServerIndex = 0;
-  let isTryingFallback = false;
 
   const video = document.getElementById('videoPlayer');
   const container = document.getElementById('channelsContainer');
   const loadingOverlay = document.getElementById('loadingOverlay');
-  const loadingText = document.getElementById('loadingText');
-  const qualityMenu = document.getElementById('qualityMenu');
+  const catContainer = document.getElementById('categoriesContainer');
+  const epgBar = document.getElementById('epgBar');
+  const epgNow = document.getElementById('epgNow');
+  const epgNext = document.getElementById('epgNext');
 
-  let favorites = JSON.parse(localStorage.getItem('zebari_favs')) || [];
-
-  document.addEventListener('click', (e) => {
-    if (!qualityMenu.contains(e.target) && !e.target.closest('.ctrl-btn')) {
-        qualityMenu.style.display = 'none';
-    }
-  });
-
-  function toggleQualityMenu(event) {
-    event.stopPropagation();
-    qualityMenu.style.display = qualityMenu.style.display === 'flex' ? 'none' : 'flex';
-  }
-
-  function populateQualityMenu() {
-    qualityMenu.innerHTML = '';
-    if (!hls || !hls.levels || hls.levels.length === 0) {
-        qualityMenu.innerHTML = '<button disabled>جودة واحدة (تلقائي)</button>';
-        return;
-    }
-    const autoBtn = document.createElement('button');
-    autoBtn.innerText = 'تلقائي (Auto)';
-    autoBtn.className = hls.currentLevel === -1 ? 'active' : '';
-    autoBtn.onclick = () => setQuality(-1);
-    qualityMenu.appendChild(autoBtn);
-
-    hls.levels.forEach((level, index) => {
-        const btn = document.createElement('button');
-        const height = level.height ? level.height + 'p' : 'مستوى ' + (index + 1);
-        btn.innerText = height;
-        btn.className = hls.currentLevel === index ? 'active' : '';
-        btn.onclick = () => setQuality(index);
-        qualityMenu.appendChild(btn);
-    });
-  }
-
-  function setQuality(levelIndex) {
-    if (hls) {
-        hls.currentLevel = levelIndex;
-        populateQualityMenu();
-        qualityMenu.style.display = 'none';
+  // 1. جلب القنوات من M3U
+  async function loadM3UPlaylist() {
+    try {
+      const response = await fetch(M3U_URL);
+      const text = await response.text();
+      parseM3U(text);
+    } catch (error) {
+      catContainer.innerHTML = '<div style="color:red; padding:10px;">تعذر تحميل القنوات.</div>';
     }
   }
 
-  function renderCategories() {
-    const catContainer = document.getElementById('categoriesContainer');
-    catContainer.innerHTML = '';
-    const categoriesSet = new Set(['الكل', 'المفضلة']);
-    channelsList.forEach(ch => categoriesSet.add(ch.cat));
-    
-    Array.from(categoriesSet).forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = `cat-btn ${cat === 'الكل' ? 'active' : ''}`;
-      if (cat === 'المفضلة') {
-        btn.innerHTML = `<i class="fa-solid fa-star" style="color:#ffd700; font-size:10px;"></i> ${cat}`;
-      } else {
-        btn.innerText = cat;
+  // 2. تحليل M3U واستخراج tvg-id
+  function parseM3U(m3uContent) {
+    const lines = m3uContent.split('\n');
+    let idCounter = 1;
+    let currentInfo = {};
+    const categoriesSet = new Set(['الكل']);
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      if (line.startsWith('#EXTINF:')) {
+        const nameMatch = line.match(/,(.*)$/);
+        currentInfo.name = nameMatch ? nameMatch[1].trim() : 'قناة';
+        
+        const groupMatch = line.match(/group-title="([^"]+)"/);
+        currentInfo.cat = groupMatch ? groupMatch[1] : 'عام';
+        categoriesSet.add(currentInfo.cat);
+        
+        const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+        currentInfo.logo = logoMatch ? logoMatch[1] : '';
+
+        // استخراج tvg-id لربطه بـ EPG
+        const idMatch = line.match(/tvg-id="([^"]+)"/);
+        currentInfo.tvgId = idMatch ? idMatch[1] : '';
+      } 
+      else if (line.startsWith('http')) {
+        if (currentInfo.name) {
+          channelsList.push({
+            id: idCounter++,
+            name: currentInfo.name,
+            cat: currentInfo.cat,
+            logo: currentInfo.logo,
+            tvgId: currentInfo.tvgId,
+            url: line
+          });
+        }
+        currentInfo = {};
       }
-      btn.onclick = () => filterByCategory(cat, btn);
-      catContainer.appendChild(btn);
-    });
-  }
-
-  function toggleFavorite(channelUrl, event) {
-    event.stopPropagation();
-    if (favorites.includes(channelUrl)) {
-      favorites = favorites.filter(url => url !== channelUrl);
-      showToast('تمت الإزالة من المفضلة', 'info');
-    } else {
-      favorites.push(channelUrl);
-      showToast('تمت الإضافة إلى المفضلة', 'success');
     }
-    localStorage.setItem('zebari_favs', JSON.stringify(favorites));
+    renderCategories(Array.from(categoriesSet));
     updateView();
   }
 
-  function showToast(message, type = 'error') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type === 'success' ? 'success' : type === 'info' ? 'info' : ''}`;
-    const icon = type === 'success' ? '<i class="fa-solid fa-check-circle"></i>' : type === 'info' ? '<i class="fa-solid fa-circle-info"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>';
-    toast.innerHTML = `${icon} <span>${message}</span>`;
-    document.getElementById('toast-container').appendChild(toast);
-    setTimeout(() => {
-      toast.style.animation = 'slideDown 0.3s ease reverse forwards';
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+  // 3. جلب وتحليل دليل البرامج XML
+  async function loadEPG() {
+    try {
+      const response = await fetch(EPG_URL);
+      const xmlText = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+      // تحويل XML إلى كائن JS للوصول السريع
+      const programmes = xmlDoc.getElementsByTagName("programme");
+      for (let i = 0; i < programmes.length; i++) {
+        const prog = programmes[i];
+        const channelId = prog.getAttribute("channel");
+        const start = prog.getAttribute("start");
+        const title = prog.getElementsByTagName("title")[0]?.textContent || '';
+
+        if (!epgData[channelId]) epgData[channelId] = [];
+        epgData[channelId].push({ start, title });
+      }
+      console.log("تم تحميل دليل البرامج بنجاح");
+    } catch (error) {
+      console.error("فشل تحميل EPG:", error);
+    }
   }
 
-  function renderChannels(channels) {
-    container.innerHTML = '';
-    if (channels.length === 0) {
-      container.innerHTML = '<div class="no-results"><i class="fa-solid fa-satellite"></i>لا توجد قنوات مطابقة</div>';
+  // 4. عرض البرنامج الحالي على الشاشة
+  function showEPGForChannel(channel) {
+    epgBar.style.display = 'flex';
+    
+    if (!channel.tvgId || !epgData[channel.tvgId]) {
+      epgNow.textContent = "لا تتوفر معلومات برامج لهذه القناة.";
+      epgNext.textContent = "";
       return;
     }
 
-    channels.forEach(ch => {
-      const isFav = favorites.includes(ch.urls[0]);
-      const card = document.createElement('div');
-      card.className = `channel-card ${currentPlayingId === ch.id ? 'active' : ''}`;
+    const programs = epgData[channel.tvgId];
+    const now = new Date();
+    let currentProg = null;
+    let nextProg = null;
+
+    // البحث عن البرنامج الحالي (مبسط)
+    for (let i = 0; i < programs.length; i++) {
+      const startTime = new Date(programs[i].start);
+      const endTime = programs[i+1] ? new Date(programs[i+1].start) : new Date(startTime.getTime() + 3600000);
       
-      card.innerHTML = `
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite('${ch.urls[0]}', event)">
-          <i class="fa-solid fa-star"></i>
-        </button>
-        ${currentPlayingId === ch.id ? '<div class="live-dot"></div>' : ''}
-        <span class="channel-icon">
-            <img src="${ch.logo}" alt="${ch.name}" class="channel-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            <i class="${ch.icon}" style="display:none; font-size:26px;"></i>
-        </span>
-        <div class="channel-name">${ch.name}</div>
-        <div class="channel-cat">${ch.cat} ${ch.urls.length > 1 ? `(${ch.urls.length} سيرفر)` : ''}</div>
-      `;
-      card.onclick = () => selectChannel(ch);
-      container.appendChild(card);
+      if (now >= startTime && now < endTime) {
+        currentProg = programs[i];
+        nextProg = programs[i+1];
+        break;
+      }
+    }
+
+    if (currentProg) {
+      epgNow.textContent = currentProg.title;
+      epgNext.textContent = nextProg ? `التالي: ${nextProg.title}` : '';
+    } else {
+      epgNow.textContent = "لا يوجد برنامج حالي.";
+      epgNext.textContent = "";
+    }
+  }
+
+  // دوال الواجهة والتشغيل
+  function renderCategories(categories) {
+    catContainer.innerHTML = '';
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = `cat-btn ${cat === 'الكل' ? 'active' : ''}`;
+      btn.innerText = cat;
+      btn.onclick = () => filterByCategory(cat, btn);
+      catContainer.appendChild(btn);
     });
   }
 
@@ -437,137 +246,85 @@
 
   function updateView() {
     let filtered = channelsList;
-    if (currentCategory === 'المفضلة') {
-      filtered = filtered.filter(ch => favorites.includes(ch.urls[0]));
-    } else if (currentCategory !== 'الكل') {
-      filtered = filtered.filter(ch => ch.cat === currentCategory);
-    }
+    if (currentCategory !== 'الكل') filtered = filtered.filter(ch => ch.cat === currentCategory);
     if (currentSearch) {
       const query = currentSearch.toLowerCase();
-      filtered = filtered.filter(ch => ch.name.toLowerCase().includes(query) || ch.cat.toLowerCase().includes(query));
+      filtered = filtered.filter(ch => ch.name.toLowerCase().includes(query));
     }
     renderChannels(filtered);
   }
 
+  function renderChannels(channels) {
+    container.innerHTML = '';
+    if (channels.length === 0) {
+      container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px;">لا توجد نتائج</div>';
+      return;
+    }
+    const displayLimit = 300;
+    channels.slice(0, displayLimit).forEach(ch => {
+      const card = document.createElement('div');
+      card.className = `channel-card ${currentPlayingId === ch.id ? 'active' : ''}`;
+      card.innerHTML = `
+        <span class="channel-icon">
+          ${ch.logo ? `<img src="${ch.logo}" class="channel-logo" onerror="this.style.display='none';">` : '<i class="fa-solid fa-tv" style="font-size:26px;"></i>'}
+        </span>
+        <div class="channel-name">${ch.name}</div>
+        <div class="channel-cat">${ch.cat}</div>
+      `;
+      card.onclick = () => selectChannel(ch);
+      container.appendChild(card);
+    });
+  }
+
   function selectChannel(channel) {
-    activeChannel = channel;
-    currentServerIndex = 0;
-    isTryingFallback = false;
-    
     currentPlayingId = channel.id;
     updateView();
-    
-    playCurrentServer();
-  }
+    showEPGForChannel(channel); // عرض معلومات البرنامج
 
-  function switchServer() {
-    if (!activeChannel || activeChannel.urls.length <= 1) {
-        showToast('هذه القناة لا تمتلك سيرفرات بديلة', 'info');
-        return;
-    }
-    
-    currentServerIndex++;
-    if (currentServerIndex >= activeChannel.urls.length) {
-        currentServerIndex = 0;
-    }
-    
-    isTryingFallback = false;
-    showToast(`جاري التحويل إلى السيرفر ${currentServerIndex + 1}`, 'info');
-    playCurrentServer();
-  }
-
-  function playCurrentServer() {
-    if (!activeChannel) return;
-
-    let rawUrl = activeChannel.urls[currentServerIndex];
-    
-    loadingText.textContent = `جاري الاتصال بالسيرفر ${currentServerIndex + 1}...`;
     loadingOverlay.style.display = 'flex';
-    qualityMenu.innerHTML = '';
-    qualityMenu.style.display = 'none';
-
     if (hls) { hls.destroy(); hls = null; }
     video.pause();
     video.removeAttribute('src');
     video.load();
 
-    let finalUrl = rawUrl;
-    if (finalUrl.startsWith('http://')) {
-        finalUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl);
-    }
+    let finalUrl = channel.url;
+    if (finalUrl.startsWith('http://')) finalUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(channel.url);
 
     if (window.Hls && Hls.isSupported()) {
-      hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+      hls = new Hls({ enableWorker: true });
       hls.loadSource(finalUrl);
       hls.attachMedia(video);
-
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         loadingOverlay.style.display = 'none';
-        populateQualityMenu();
-        video.play().catch(() => showToast('المتصفح منع التشغيل التلقائي، اضغط ▶', 'error'));
+        video.play().catch(() => {});
       });
-
       hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR || data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-             
-             if (!isTryingFallback) {
-                 showToast('السيرفر الحالي لا يعمل، جاري تجربة السيرفر البديل...', 'error');
-                 isTryingFallback = true;
-                 
-                 currentServerIndex++;
-                 if (currentServerIndex >= activeChannel.urls.length) {
-                     currentServerIndex = 0;
-                     loadingOverlay.style.display = 'none';
-                     showToast('جميع السيرفرات لهذه القناة معطلة حالياً', 'error');
-                     hls.destroy(); hls = null;
-                     currentPlayingId = null;
-                     updateView();
-                     return;
-                 }
-                 
-                 playCurrentServer();
-             } else {
-                 loadingOverlay.style.display = 'none';
-                 showToast('تعذر تشغيل القناة (السيرفرات لا تستجيب)', 'error');
-                 hls.destroy(); hls = null;
-                 currentPlayingId = null;
-                 updateView();
-             }
-          }
-        }
+        if (data.fatal) { loadingOverlay.style.display = 'none'; showToast('تعذر تشغيل القناة'); hls.destroy(); hls = null; }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = finalUrl;
-      video.addEventListener('loadedmetadata', () => {
-        loadingOverlay.style.display = 'none';
-        video.play();
-      });
-    } else {
-      loadingOverlay.style.display = 'none';
-      showToast('متصفحك لا يدعم تقنية HLS', 'error');
+      video.addEventListener('loadedmetadata', () => { loadingOverlay.style.display = 'none'; video.play(); });
     }
+  }
+
+  function showToast(msg) {
+    const div = document.createElement('div');
+    div.style = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#ff003c; color:#fff; padding:10px 20px; border-radius:8px; z-index:1000;";
+    div.innerText = msg;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
   }
 
   function toggleFullscreen() {
     const wrap = document.querySelector('.video-wrapper');
-    if (!document.fullscreenElement) {
-      (wrap.requestFullscreen || wrap.webkitRequestFullscreen).call(wrap);
-    } else {
-      document.exitFullscreen();
-    }
+    if (!document.fullscreenElement) wrap.requestFullscreen?.();
+    else document.exitFullscreen?.();
   }
 
-  function togglePiP() {
-    if (document.pictureInPictureElement) {
-      document.exitPictureInPicture().catch(err => console.log(err));
-    } else if (video !== document.pictureInPictureElement) {
-      video.requestPictureInPicture().catch(err => showToast('المتصفح لا يدعم الصورة داخل صورة', 'error'));
-    }
-  }
+  // بدء التحميل
+  loadEPG(); // جلب البرامج أولاً
+  loadM3UPlaylist(); // جلب القنوات
 
-  renderCategories();
-  updateView();
 </script>
 </body>
 </html>
